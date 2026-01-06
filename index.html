@@ -22,7 +22,7 @@
       position: relative;
     }
     
-    /* Video background */
+    /* Video/GIF background */
     .video-background {
       position: fixed;
       top: 0;
@@ -31,10 +31,10 @@
       height: 100%;
       z-index: 0;
       overflow: hidden;
+      background: #000;
     }
     
-    .video-background video,
-    .video-background iframe {
+    .video-background video {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -44,16 +44,29 @@
       object-fit: cover;
     }
     
-    /* Green tint overlay on video */
-    .video-background::after {
-      content: "";
+    /* Fallback GIF background */
+    .gif-background {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 50, 0, 0.7);
-      mix-blend-mode: multiply;
+      background-image: url('https://media.giphy.com/media/eIm624c8nnNbiG0V3g/giphy.gif');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: none;
+    }
+    
+    /* Green tint overlay on video */
+    .video-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 30, 0, 0.75);
+      z-index: 1;
     }
     
     /* Matrix rain canvas */
@@ -61,7 +74,7 @@
       position: fixed;
       top: 0;
       left: 0;
-      z-index: 1;
+      z-index: 2;
       opacity: 0.5;
       pointer-events: none;
     }
@@ -81,7 +94,7 @@
         transparent 2px
       );
       pointer-events: none;
-      z-index: 100;
+      z-index: 101;
     }
     
     /* CRT flicker */
@@ -94,7 +107,7 @@
       background: rgba(18, 16, 16, 0.1);
       opacity: 0;
       pointer-events: none;
-      z-index: 100;
+      z-index: 102;
       animation: flicker 0.15s infinite;
     }
     
@@ -124,7 +137,7 @@
     
     .terminal {
       position: relative;
-      z-index: 10;
+      z-index: 50;
       max-width: 800px;
       margin: 0 auto;
       padding: 40px 20px;
@@ -197,15 +210,6 @@
       50% { opacity: 0.5; }
     }
     
-    .blink {
-      animation: blink 1s step-end infinite;
-    }
-    
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-    
     .cursor {
       display: inline-block;
       width: 10px;
@@ -215,11 +219,16 @@
       animation: blink 1s step-end infinite;
     }
     
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    
     .days-container {
       border: 1px solid #00ff00;
       padding: 20px;
       margin: 20px 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8);
       box-shadow: 0 0 10px #00ff00, inset 0 0 10px rgba(0, 255, 0, 0.1);
     }
     
@@ -252,24 +261,35 @@
     }
     
     .info-box {
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8);
       padding: 15px;
       margin: 10px 0;
       border-left: 3px solid #00ff00;
     }
+    
+    .status-ok {
+      color: #00ff00;
+    }
+    
+    .status-detecting {
+      color: #ffff00;
+      animation: blink 0.5s infinite;
+    }
   </style>
 </head>
 <body>
-  <!-- VIDEO BACKGROUND - Replace the src with your video -->
+  <!-- BACKGROUND WITH FALLBACK -->
   <div class="video-background">
-    <!-- OPTION 1: Local/hosted video file -->
-    <video autoplay muted loop playsinline>
+    <!-- Primary: GIF (works in ALL browsers) -->
+    <div class="gif-background" id="gifBg"></div>
+    
+    <!-- Video (if you have a local file) -->
+    <video id="bgVideo" autoplay muted loop playsinline disablePictureInPicture>
       <source src="neo-bullet-dodge.mp4" type="video/mp4">
+      <source src="neo-bullet-dodge.webm" type="video/webm">
     </video>
     
-    <!-- OPTION 2: Use a GIF instead (uncomment below, comment out video above)
-    <img src="https://media.giphy.com/media/eIm624c8nnNbiG0V3g/giphy.gif" alt="Matrix">
-    -->
+    <div class="video-overlay"></div>
   </div>
   
   <canvas id="matrix"></canvas>
@@ -288,27 +308,36 @@
     
     <div class="line">
       <span class="prefix">MADDGAMER99@terminal:~$ </span>
-      <span class="command">fetch --system-time --location</span>
+      <span class="command">fetch --geo-locate --sync-timezone</span>
     </div>
     
     <div class="output">
       <div class="info-box">
-        <div class="prompt">[LOCATION DETECTED]</div>
-        <div class="location-info" id="location">DETECTING...</div>
-        <div class="location-info">TIMEZONE: <span id="timezone"></span></div>
+        <div class="prompt">[GEOLOCATION DATA]</div>
+        <div class="location-info">STATUS: <span id="status" class="status-detecting">DETECTING...</span></div>
+        <div class="location-info">LOCATION: <span id="location">SCANNING...</span></div>
+        <div class="location-info">COUNTRY: <span id="country">---</span></div>
+        <div class="location-info">IP ADDRESS: <span id="ip">---</span></div>
+        <div class="location-info">TIMEZONE: <span id="timezone">---</span></div>
+        <div class="location-info">UTC OFFSET: <span id="utcOffset">---</span></div>
       </div>
     </div>
     
+    <div class="line">
+      <span class="prefix">MADDGAMER99@terminal:~$ </span>
+      <span class="command">display --local-time</span>
+    </div>
+    
     <div class="output">
       <div class="info-box">
-        <div class="prompt">[SYSTEM DATE]</div>
+        <div class="prompt">[LOCAL DATE]</div>
         <div class="highlight glitch" id="date"></div>
       </div>
     </div>
     
     <div class="output">
       <div class="info-box">
-        <div class="prompt">[CURRENT TIME]</div>
+        <div class="prompt">[LOCAL TIME]</div>
         <div class="highlight" id="time"></div>
       </div>
     </div>
@@ -339,7 +368,41 @@
   </div>
 
   <script>
-    // Matrix rain effect
+    // ===== VIDEO/GIF FALLBACK SYSTEM =====
+    const video = document.getElementById('bgVideo');
+    const gifBg = document.getElementById('gifBg');
+    
+    // Check if video can play, if not show GIF
+    function checkVideoSupport() {
+      const canPlay = video.canPlayType('video/mp4') || video.canPlayType('video/webm');
+      
+      if (!canPlay || video.error) {
+        showGifFallback();
+        return;
+      }
+      
+      // Check if video actually plays
+      video.play().catch(() => {
+        showGifFallback();
+      });
+      
+      // If video doesn't start within 3 seconds, show GIF
+      setTimeout(() => {
+        if (video.paused || video.readyState < 2) {
+          showGifFallback();
+        }
+      }, 3000);
+    }
+    
+    function showGifFallback() {
+      video.style.display = 'none';
+      gifBg.style.display = 'block';
+    }
+    
+    video.addEventListener('error', showGifFallback);
+    checkVideoSupport();
+    
+    // ===== MATRIX RAIN EFFECT =====
     const canvas = document.getElementById('matrix');
     const ctx = canvas.getContext('2d');
     
@@ -369,43 +432,112 @@
     
     setInterval(drawMatrix, 50);
     
-    // Get user's timezone
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    document.getElementById('timezone').textContent = timezone;
+    // ===== GEOLOCATION & TIMEZONE =====
+    let userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    let userLocale = navigator.language || 'en-US';
     
-    // Get user's location from IP (free API)
     async function getLocation() {
       try {
+        // Try primary API
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
-        const locationStr = `${data.city}, ${data.region}, ${data.country_name}`;
-        document.getElementById('location').textContent = locationStr;
+        
+        if (data.error) throw new Error('API Error');
+        
+        // Update timezone from API
+        userTimezone = data.timezone || userTimezone;
+        
+        // Calculate UTC offset
+        const now = new Date();
+        const utcOffset = data.utc_offset || getUTCOffset(now, userTimezone);
+        
+        document.getElementById('status').textContent = 'CONNECTED';
+        document.getElementById('status').className = 'status-ok';
+        document.getElementById('location').textContent = `${data.city}, ${data.region}`;
+        document.getElementById('country').textContent = data.country_name;
+        document.getElementById('ip').textContent = data.ip;
+        document.getElementById('timezone').textContent = userTimezone;
+        document.getElementById('utcOffset').textContent = utcOffset;
+        
       } catch (error) {
-        // Fallback to timezone-based location
-        document.getElementById('location').textContent = timezone.replace(/_/g, ' ');
+        // Try backup API
+        try {
+          const response = await fetch('https://ipwho.is/');
+          const data = await response.json();
+          
+          userTimezone = data.timezone.id || userTimezone;
+          
+          document.getElementById('status').textContent = 'CONNECTED';
+          document.getElementById('status').className = 'status-ok';
+          document.getElementById('location').textContent = `${data.city}, ${data.region}`;
+          document.getElementById('country').textContent = data.country;
+          document.getElementById('ip').textContent = data.ip;
+          document.getElementById('timezone').textContent = userTimezone;
+          document.getElementById('utcOffset').textContent = data.timezone.utc || getUTCOffset(new Date(), userTimezone);
+          
+        } catch (backupError) {
+          // Use browser defaults
+          document.getElementById('status').textContent = 'LOCAL MODE';
+          document.getElementById('status').className = 'status-ok';
+          document.getElementById('location').textContent = 'UNAVAILABLE';
+          document.getElementById('country').textContent = 'UNAVAILABLE';
+          document.getElementById('ip').textContent = 'HIDDEN';
+          document.getElementById('timezone').textContent = userTimezone;
+          document.getElementById('utcOffset').textContent = getUTCOffset(new Date(), userTimezone);
+        }
+      }
+    }
+    
+    function getUTCOffset(date, timezone) {
+      try {
+        const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+        const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+        const offset = (tzDate - utcDate) / (1000 * 60 * 60);
+        const sign = offset >= 0 ? '+' : '';
+        return `UTC${sign}${offset}`;
+      } catch {
+        const offset = -date.getTimezoneOffset() / 60;
+        const sign = offset >= 0 ? '+' : '';
+        return `UTC${sign}${offset}`;
       }
     }
     
     getLocation();
     
-    // Time and countdown - automatically uses visitor's local time
+    // ===== TIME & COUNTDOWN (uses detected timezone) =====
     function update() {
       const now = new Date();
+      
+      // Format date in user's timezone
+      const dateOptions = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: userTimezone
+      };
+      
+      const timeOptions = {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: userTimezone
+      };
+      
+      try {
+        document.getElementById('date').textContent = now.toLocaleDateString(userLocale, dateOptions).toUpperCase();
+        document.getElementById('time').textContent = now.toLocaleTimeString(userLocale, timeOptions);
+      } catch {
+        document.getElementById('date').textContent = now.toLocaleDateString().toUpperCase();
+        document.getElementById('time').textContent = now.toLocaleTimeString();
+      }
+      
+      // Countdown calculation
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const endOfYear = new Date(now.getFullYear() + 1, 0, 1);
       const daysLeft = Math.ceil((endOfYear - now) / (1000 * 60 * 60 * 24));
       const yearProgress = ((now - startOfYear) / (endOfYear - startOfYear) * 100).toFixed(2);
-      
-      document.getElementById('date').textContent = now.toLocaleDateString(undefined, {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-      }).toUpperCase();
-      
-      document.getElementById('time').textContent = now.toLocaleTimeString(undefined, { 
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
       
       document.getElementById('days').textContent = daysLeft;
       document.getElementById('targetYear').textContent = now.getFullYear() + 1;
@@ -416,6 +548,7 @@
     update();
     setInterval(update, 1000);
     
+    // ===== RESIZE HANDLER =====
     window.addEventListener('resize', () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
