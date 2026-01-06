@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SYSTEM TERMINAL</title>
+  <title>MADDGAMER99</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
     
@@ -18,8 +18,42 @@
       background: #0a0a0a;
       color: #00ff00;
       min-height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
       position: relative;
+    }
+    
+    /* Video background */
+    .video-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+    }
+    
+    .video-background video,
+    .video-background iframe {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+    }
+    
+    /* Green tint overlay on video */
+    .video-background::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 50, 0, 0.7);
+      mix-blend-mode: multiply;
     }
     
     /* Matrix rain canvas */
@@ -27,13 +61,13 @@
       position: fixed;
       top: 0;
       left: 0;
-      z-index: 0;
-      opacity: 0.4;
+      z-index: 1;
+      opacity: 0.5;
+      pointer-events: none;
     }
     
     /* Scanline effect */
-    body::before {
-      content: "";
+    .scanlines {
       position: fixed;
       top: 0;
       left: 0;
@@ -51,8 +85,7 @@
     }
     
     /* CRT flicker */
-    body::after {
-      content: "";
+    .flicker {
       position: fixed;
       top: 0;
       left: 0;
@@ -98,7 +131,7 @@
     }
     
     .ascii-header {
-      font-size: 0.5rem;
+      font-size: 0.35rem;
       line-height: 1.1;
       color: #00ff00;
       text-shadow: 0 0 10px #00ff00;
@@ -108,6 +141,10 @@
     }
     
     @media (min-width: 600px) {
+      .ascii-header { font-size: 0.55rem; }
+    }
+    
+    @media (min-width: 900px) {
       .ascii-header { font-size: 0.7rem; }
     }
     
@@ -140,6 +177,13 @@
       color: #00ffff;
       text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
       font-size: 2rem;
+    }
+    
+    .location-info {
+      color: #ffff00;
+      text-shadow: 0 0 10px #ffff00;
+      font-size: 0.9rem;
+      margin-top: 5px;
     }
     
     .warning {
@@ -175,6 +219,7 @@
       border: 1px solid #00ff00;
       padding: 20px;
       margin: 20px 0;
+      background: rgba(0, 0, 0, 0.7);
       box-shadow: 0 0 10px #00ff00, inset 0 0 10px rgba(0, 255, 0, 0.1);
     }
     
@@ -205,45 +250,79 @@
       92% { transform: translate(2px, -1px); }
       93% { transform: translate(-1px, 2px); }
     }
+    
+    .info-box {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 3px solid #00ff00;
+    }
   </style>
 </head>
 <body>
+  <!-- VIDEO BACKGROUND - Replace the src with your video -->
+  <div class="video-background">
+    <!-- OPTION 1: Local/hosted video file -->
+    <video autoplay muted loop playsinline>
+      <source src="neo-bullet-dodge.mp4" type="video/mp4">
+    </video>
+    
+    <!-- OPTION 2: Use a GIF instead (uncomment below, comment out video above)
+    <img src="https://media.giphy.com/media/eIm624c8nnNbiG0V3g/giphy.gif" alt="Matrix">
+    -->
+  </div>
+  
   <canvas id="matrix"></canvas>
+  <div class="scanlines"></div>
+  <div class="flicker"></div>
   
   <div class="terminal">
     <div class="ascii-header">
- ███████╗██╗   ██╗███████╗████████╗███████╗███╗   ███╗
- ██╔════╝╚██╗ ██╔╝██╔════╝╚══██╔══╝██╔════╝████╗ ████║
- ███████╗ ╚████╔╝ ███████╗   ██║   █████╗  ██╔████╔██║
- ╚════██║  ╚██╔╝  ╚════██║   ██║   ██╔══╝  ██║╚██╔╝██║
- ███████║   ██║   ███████║   ██║   ███████╗██║ ╚═╝ ██║
- ╚══════╝   ╚═╝   ╚══════╝   ╚═╝   ╚══════╝╚═╝     ╚═╝
+ ███╗   ███╗ █████╗ ██████╗ ██████╗  ██████╗  █████╗ ███╗   ███╗███████╗██████╗  █████╗  █████╗ 
+ ████╗ ████║██╔══██╗██╔══██╗██╔══██╗██╔════╝ ██╔══██╗████╗ ████║██╔════╝██╔══██╗██╔══██╗██╔══██╗
+ ██╔████╔██║███████║██║  ██║██║  ██║██║  ███╗███████║██╔████╔██║█████╗  ██████╔╝╚██████║╚██████║
+ ██║╚██╔╝██║██╔══██║██║  ██║██║  ██║██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ██╔══██╗ ╚═══██║ ╚═══██║
+ ██║ ╚═╝ ██║██║  ██║██████╔╝██████╔╝╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗██║  ██║ █████╔╝ █████╔╝
+ ╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚════╝  ╚════╝ 
     </div>
     
     <div class="line">
-      <span class="prefix">root@server:~$ </span>
-      <span class="command">fetch --system-time</span>
+      <span class="prefix">MADDGAMER99@terminal:~$ </span>
+      <span class="command">fetch --system-time --location</span>
     </div>
     
     <div class="output">
-      <div class="prompt">[SYSTEM DATE]</div>
-      <div class="highlight glitch" id="date"></div>
+      <div class="info-box">
+        <div class="prompt">[LOCATION DETECTED]</div>
+        <div class="location-info" id="location">DETECTING...</div>
+        <div class="location-info">TIMEZONE: <span id="timezone"></span></div>
+      </div>
     </div>
     
     <div class="output">
-      <div class="prompt">[CURRENT TIME]</div>
-      <div class="highlight" id="time"></div>
+      <div class="info-box">
+        <div class="prompt">[SYSTEM DATE]</div>
+        <div class="highlight glitch" id="date"></div>
+      </div>
+    </div>
+    
+    <div class="output">
+      <div class="info-box">
+        <div class="prompt">[CURRENT TIME]</div>
+        <div class="highlight" id="time"></div>
+      </div>
     </div>
     
     <div class="line">
-      <span class="prefix">root@server:~$ </span>
-      <span class="command">calculate --days-until NEW_YEAR_2025</span>
+      <span class="prefix">MADDGAMER99@terminal:~$ </span>
+      <span class="command">calculate --days-until NEW_YEAR</span>
     </div>
     
     <div class="output">
       <div class="days-container">
         <div class="prompt">[COUNTDOWN INITIALIZED]</div>
-        <div>DAYS REMAINING: <span class="warning" id="days"></span></div>
+        <div>TARGET: NEW YEAR <span id="targetYear"></span></div>
+        <div style="margin-top: 10px;">DAYS REMAINING: <span class="warning" id="days"></span></div>
         <div class="progress-bar">
           <div class="progress-fill" id="progress"></div>
         </div>
@@ -254,7 +333,7 @@
     </div>
     
     <div class="line">
-      <span class="prefix">root@server:~$ </span>
+      <span class="prefix">MADDGAMER99@terminal:~$ </span>
       <span class="cursor"></span>
     </div>
   </div>
@@ -267,7 +346,7 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+    const chars = 'MADDGAMER99ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
     const fontSize = 14;
     const columns = canvas.width / fontSize;
     const drops = Array(Math.floor(columns)).fill(1);
@@ -290,7 +369,26 @@
     
     setInterval(drawMatrix, 50);
     
-    // Time and countdown
+    // Get user's timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    document.getElementById('timezone').textContent = timezone;
+    
+    // Get user's location from IP (free API)
+    async function getLocation() {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        const locationStr = `${data.city}, ${data.region}, ${data.country_name}`;
+        document.getElementById('location').textContent = locationStr;
+      } catch (error) {
+        // Fallback to timezone-based location
+        document.getElementById('location').textContent = timezone.replace(/_/g, ' ');
+      }
+    }
+    
+    getLocation();
+    
+    // Time and countdown - automatically uses visitor's local time
     function update() {
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
@@ -298,12 +396,19 @@
       const daysLeft = Math.ceil((endOfYear - now) / (1000 * 60 * 60 * 24));
       const yearProgress = ((now - startOfYear) / (endOfYear - startOfYear) * 100).toFixed(2);
       
-      document.getElementById('date').textContent = now.toLocaleDateString('en-US', {
+      document.getElementById('date').textContent = now.toLocaleDateString(undefined, {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
       }).toUpperCase();
       
-      document.getElementById('time').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+      document.getElementById('time').textContent = now.toLocaleTimeString(undefined, { 
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      
       document.getElementById('days').textContent = daysLeft;
+      document.getElementById('targetYear').textContent = now.getFullYear() + 1;
       document.getElementById('progress').style.width = yearProgress + '%';
       document.getElementById('percent').textContent = yearProgress;
     }
