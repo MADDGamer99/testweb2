@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Date & Countdown</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: white;
+      text-align: center;
+    }
+    .container { padding: 20px; }
+    h1 { font-size: 2.5rem; margin-bottom: 10px; }
+    .time { font-size: 3rem; color: #00d9ff; }
+    .countdown { font-size: 1.5rem; margin-top: 30px; }
+    .days { font-size: 4rem; color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="date"></h1>
+    <div class="time" id="time"></div>
+    <div class="countdown">
+      <p>Days until New Year:</p>
+      <div class="days" id="days"></div>
+    </div>
+  </div>
+  <script>
+    function update() {
+      const now = new Date();
+      const newYear = new Date(now.getFullYear() + 1, 0, 1);
+      const daysLeft = Math.ceil((newYear - now) / (1000 * 60 * 60 * 24));
+      
+      document.getElementById('date').textContent = now.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      document.getElementById('time').textContent = now.toLocaleTimeString();
+      document.getElementById('days').textContent = daysLeft;
+    }
+    update();
+    setInterval(update, 1000);
+  </script>
+</body>
+</html>
