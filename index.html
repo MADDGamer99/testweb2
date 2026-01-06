@@ -3,49 +3,318 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Date & Countdown</title>
+  <title>SYSTEM TERMINAL</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    
+    * {
       margin: 0;
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
-      color: white;
-      text-align: center;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .container { padding: 20px; }
-    h1 { font-size: 2.5rem; margin-bottom: 10px; }
-    .time { font-size: 3rem; color: #00d9ff; }
-    .countdown { font-size: 1.5rem; margin-top: 30px; }
-    .days { font-size: 4rem; color: #ff6b6b; }
+    
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background: #0a0a0a;
+      color: #00ff00;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Matrix rain canvas */
+    #matrix {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      opacity: 0.4;
+    }
+    
+    /* Scanline effect */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+    
+    /* CRT flicker */
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(18, 16, 16, 0.1);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+      animation: flicker 0.15s infinite;
+    }
+    
+    @keyframes flicker {
+      0% { opacity: 0.27861; }
+      5% { opacity: 0.34769; }
+      10% { opacity: 0.23604; }
+      15% { opacity: 0.90626; }
+      20% { opacity: 0.18128; }
+      25% { opacity: 0.83891; }
+      30% { opacity: 0.65583; }
+      35% { opacity: 0.67807; }
+      40% { opacity: 0.26559; }
+      45% { opacity: 0.84693; }
+      50% { opacity: 0.96019; }
+      55% { opacity: 0.08594; }
+      60% { opacity: 0.20313; }
+      65% { opacity: 0.71988; }
+      70% { opacity: 0.53455; }
+      75% { opacity: 0.37288; }
+      80% { opacity: 0.71428; }
+      85% { opacity: 0.70419; }
+      90% { opacity: 0.7003; }
+      95% { opacity: 0.36108; }
+      100% { opacity: 0.24387; }
+    }
+    
+    .terminal {
+      position: relative;
+      z-index: 10;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    .ascii-header {
+      font-size: 0.5rem;
+      line-height: 1.1;
+      color: #00ff00;
+      text-shadow: 0 0 10px #00ff00;
+      margin-bottom: 30px;
+      white-space: pre;
+      overflow: hidden;
+    }
+    
+    @media (min-width: 600px) {
+      .ascii-header { font-size: 0.7rem; }
+    }
+    
+    .prompt {
+      color: #00ff00;
+      text-shadow: 0 0 5px #00ff00;
+      margin-bottom: 15px;
+    }
+    
+    .line {
+      margin: 10px 0;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    
+    .prefix {
+      color: #00aa00;
+    }
+    
+    .command {
+      color: #00ff00;
+    }
+    
+    .output {
+      padding-left: 20px;
+      margin: 5px 0 20px 0;
+    }
+    
+    .highlight {
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+      font-size: 2rem;
+    }
+    
+    .warning {
+      color: #ff0000;
+      text-shadow: 0 0 10px #ff0000;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .blink {
+      animation: blink 1s step-end infinite;
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      height: 1.2em;
+      background: #00ff00;
+      margin-left: 5px;
+      animation: blink 1s step-end infinite;
+    }
+    
+    .days-container {
+      border: 1px solid #00ff00;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 0 10px #00ff00, inset 0 0 10px rgba(0, 255, 0, 0.1);
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #0a0a0a;
+      border: 1px solid #00ff00;
+      margin-top: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff00, #00ffff);
+      box-shadow: 0 0 10px #00ff00;
+      transition: width 1s;
+    }
+    
+    .glitch {
+      animation: glitch 2s infinite;
+    }
+    
+    @keyframes glitch {
+      0%, 90%, 100% { transform: translate(0); }
+      91% { transform: translate(-2px, 1px); }
+      92% { transform: translate(2px, -1px); }
+      93% { transform: translate(-1px, 2px); }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1 id="date"></h1>
-    <div class="time" id="time"></div>
-    <div class="countdown">
-      <p>Days until New Year:</p>
-      <div class="days" id="days"></div>
+  <canvas id="matrix"></canvas>
+  
+  <div class="terminal">
+    <div class="ascii-header">
+ ███████╗██╗   ██╗███████╗████████╗███████╗███╗   ███╗
+ ██╔════╝╚██╗ ██╔╝██╔════╝╚══██╔══╝██╔════╝████╗ ████║
+ ███████╗ ╚████╔╝ ███████╗   ██║   █████╗  ██╔████╔██║
+ ╚════██║  ╚██╔╝  ╚════██║   ██║   ██╔══╝  ██║╚██╔╝██║
+ ███████║   ██║   ███████║   ██║   ███████╗██║ ╚═╝ ██║
+ ╚══════╝   ╚═╝   ╚══════╝   ╚═╝   ╚══════╝╚═╝     ╚═╝
+    </div>
+    
+    <div class="line">
+      <span class="prefix">root@server:~$ </span>
+      <span class="command">fetch --system-time</span>
+    </div>
+    
+    <div class="output">
+      <div class="prompt">[SYSTEM DATE]</div>
+      <div class="highlight glitch" id="date"></div>
+    </div>
+    
+    <div class="output">
+      <div class="prompt">[CURRENT TIME]</div>
+      <div class="highlight" id="time"></div>
+    </div>
+    
+    <div class="line">
+      <span class="prefix">root@server:~$ </span>
+      <span class="command">calculate --days-until NEW_YEAR_2025</span>
+    </div>
+    
+    <div class="output">
+      <div class="days-container">
+        <div class="prompt">[COUNTDOWN INITIALIZED]</div>
+        <div>DAYS REMAINING: <span class="warning" id="days"></span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress"></div>
+        </div>
+        <div style="margin-top: 10px; font-size: 0.8rem;">
+          YEAR PROGRESS: <span id="percent"></span>%
+        </div>
+      </div>
+    </div>
+    
+    <div class="line">
+      <span class="prefix">root@server:~$ </span>
+      <span class="cursor"></span>
     </div>
   </div>
+
   <script>
+    // Matrix rain effect
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff00';
+      ctx.font = fontSize + 'px monospace';
+      
+      for (let i = 0; i < drops.length; i++) {
+        const char = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    
+    setInterval(drawMatrix, 50);
+    
+    // Time and countdown
     function update() {
       const now = new Date();
-      const newYear = new Date(now.getFullYear() + 1, 0, 1);
-      const daysLeft = Math.ceil((newYear - now) / (1000 * 60 * 60 * 24));
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const endOfYear = new Date(now.getFullYear() + 1, 0, 1);
+      const daysLeft = Math.ceil((endOfYear - now) / (1000 * 60 * 60 * 24));
+      const yearProgress = ((now - startOfYear) / (endOfYear - startOfYear) * 100).toFixed(2);
       
       document.getElementById('date').textContent = now.toLocaleDateString('en-US', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-      });
-      document.getElementById('time').textContent = now.toLocaleTimeString();
+      }).toUpperCase();
+      
+      document.getElementById('time').textContent = now.toLocaleTimeString('en-US', { hour12: false });
       document.getElementById('days').textContent = daysLeft;
+      document.getElementById('progress').style.width = yearProgress + '%';
+      document.getElementById('percent').textContent = yearProgress;
     }
+    
     update();
     setInterval(update, 1000);
+    
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
   </script>
 </body>
 </html>
