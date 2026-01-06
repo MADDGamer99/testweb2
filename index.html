@@ -314,7 +314,6 @@
         <div class="location-info">STATUS: <span id="status" class="status-detecting">DETECTING...</span></div>
         <div class="location-info">LOCATION: <span id="location">SCANNING...</span></div>
         <div class="location-info">COUNTRY: <span id="country">---</span></div>
-        <div class="location-info">IP ADDRESS: <span id="ip">---</span></div>
         <div class="location-info">TIMEZONE: <span id="timezone">---</span></div>
         <div class="location-info">UTC OFFSET: <span id="utcOffset">---</span></div>
       </div>
@@ -452,7 +451,6 @@
         document.getElementById('status').className = 'status-ok';
         document.getElementById('location').textContent = `${data.city}, ${data.region}`;
         document.getElementById('country').textContent = data.country_name;
-        document.getElementById('ip').textContent = data.ip;
         document.getElementById('timezone').textContent = userTimezone;
         document.getElementById('utcOffset').textContent = utcOffset;
         
@@ -468,7 +466,6 @@
           document.getElementById('status').className = 'status-ok';
           document.getElementById('location').textContent = `${data.city}, ${data.region}`;
           document.getElementById('country').textContent = data.country;
-          document.getElementById('ip').textContent = data.ip;
           document.getElementById('timezone').textContent = userTimezone;
           document.getElementById('utcOffset').textContent = data.timezone.utc || getUTCOffset(new Date(), userTimezone);
           
@@ -478,7 +475,6 @@
           document.getElementById('status').className = 'status-ok';
           document.getElementById('location').textContent = 'UNAVAILABLE';
           document.getElementById('country').textContent = 'UNAVAILABLE';
-          document.getElementById('ip').textContent = 'HIDDEN';
           document.getElementById('timezone').textContent = userTimezone;
           document.getElementById('utcOffset').textContent = getUTCOffset(new Date(), userTimezone);
         }
